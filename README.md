@@ -14,7 +14,7 @@
 
 ### TODO
 
-- add `python-keycloak` to requirements
+- ~~add `python-keycloak` to requirements~~
 - replicate some tests found here https://github.com/marcospereirampj/python-keycloak/tree/master/tests
 - do further research!
 
