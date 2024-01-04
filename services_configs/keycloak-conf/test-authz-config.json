@@ -1,0 +1,74 @@
+{
+  "allowRemoteResourceManagement": true,
+  "policyEnforcementMode": "ENFORCING",
+  "resources": [
+    {
+      "name": "Default Resource",
+      "type": "urn:myclient:resources:default",
+      "ownerManagedAccess": false,
+      "displayName": "",
+      "attributes": {
+        "first": [
+          "attribute"
+        ]
+      },
+      "_id": "470bd7eb-3b21-4443-bcda-c79b99ba8abe",
+      "uris": [
+        "/*"
+      ],
+      "scopes": [
+        {
+          "name": "test-scope"
+        }
+      ],
+      "icon_uri": ""
+    }
+  ],
+  "policies": [
+    {
+      "id": "9cbcd924-391e-45a9-9fab-65dbd51bffed",
+      "name": "Default Policy",
+      "description": "A policy that grants access only for users within this realm",
+      "type": "js",
+      "logic": "POSITIVE",
+      "decisionStrategy": "AFFIRMATIVE",
+      "config": {
+        "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n"
+      }
+    },
+    {
+      "id": "24df2628-67d9-4137-a42e-f564aeadd5e0",
+      "name": "Default Permission",
+      "description": "A permission that applies to the default resource type",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "defaultResourceType": "urn:myclient:resources:default",
+        "applyPolicies": "[\"Default Policy\"]"
+      }
+    },
+    {
+      "id": "b064670e-e535-4a52-a8ae-f85b2f1e3eb9",
+      "name": "try:read",
+      "description": "this is a test for a randon read permission",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "defaultResourceType": "",
+        "resources": "[\"Default Resource\"]",
+        "applyPolicies": "[\"Default Policy\"]"
+      }
+    }
+  ],
+  "scopes": [
+    {
+      "id": "ff573dc3-9487-4c4d-b482-77ac9dcd01d6",
+      "name": "test-scope",
+      "iconUri": "",
+      "displayName": "scope to test"
+    }
+  ],
+  "decisionStrategy": "UNANIMOUS"
+}

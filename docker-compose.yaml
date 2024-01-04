@@ -1,0 +1,80 @@
+version: "3"
+
+services:
+  keycloak:
+      # dockerfile: ./Dockerfile.alpine
+      # context: ./docker
+    image: quay.io/keycloak/keycloak:22.0
+    # image: bitnami/kubectl
+    # entrypoint: sh
+    # entrypoint: tail -f /dev/null
+    # DEFAULT COMMAND
+    # command: start-dev
+    # BEHIND PROXY: https://pecenekmanas.medium.com/keycloak-behind-a-reverse-proxy-with-https-b149eda3b9f3
+    command: 
+      - start-dev
+      # https://www.keycloak.org/server/reverseproxy
+      - --proxy=edge
+      # - --hostname-path=/auth
+      # - --http-relative-path=/auth
+      - --hostname-strict=false
+      - --hostname-strict-https=false
+      # https://www.mastertheboss.com/keycloak/keycloak-with-docker/?utm_content=cmp-true
+      - --import-realm
+    volumes:
+      - ./services_configs/keycloak-conf/realm-export.json:/opt/keycloak/data/import/realm.json
+    # env_file:
+    #   - ./credentials/aws/keys.env
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=password
+    # working_dir: /workspace
+    ports: 
+      - "8090:8080"
+
+  keycloak-py-test:
+    build:
+      context: ./python/test
+      # dockerfile: ./tests/Dockerfile
+    image: python-uma-tests
+    volumes:
+      - ./python/test/tests:/app/tests
+    # entrypoint: "tail -f /dev/null"
+    # entrypoint: bash -c "python -B -m debugpy --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8001"
+    entrypoint: >
+      /bin/bash -c "
+      python3 -B -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m pytest"
+    env_file:
+      - ./python/test/.env
+    ports:
+      - 8081:8001
+      - 5678:5678
+      # - 5679:5679
+    depends_on:
+      keycloak:
+        condition: service_started
+    profiles:
+      - pytest
+  
+  keycloak-py-fastapi:
+    build:
+      context: ./python/fastAPI
+      # dockerfile: ./tests/Dockerfile
+    image: python-uma-fastapi
+    volumes:
+      - ./python/fastAPI/app:/app
+    # entrypoint: "tail -f /dev/null"
+    # command: "uvicorn main:app --host 0.0.0.0 --port 80 --reload"
+    command: "python -u -m debugpy --listen 0.0.0.0:5678 -m uvicorn --reload --host 0.0.0.0 --port 80 main:app"
+    env_file:
+      - ./python/fastAPI/.env
+    ports:
+      - 8092:80
+      - 5679:5678
+      # - 5679:5679
+    depends_on:
+      keycloak:
+        condition: service_started
+    profiles:
+      - fastapi
+
