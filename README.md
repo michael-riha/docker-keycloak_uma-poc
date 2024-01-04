@@ -36,4 +36,10 @@ for `UMA` to work please enable in `Keycloak` http://localhost:8090/admin/master
   - enable `Service accounts roles`
   - enable `Authorization`
 - `myrealm` -> `clients` -> `myclient` -> `Authorization`
+
+
   - have fun! 🥳
+
+## Authorization `on&off`
+
+![JSON with & without Authorization](docs/assets/diff_client_authorization.png)

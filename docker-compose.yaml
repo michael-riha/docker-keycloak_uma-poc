@@ -22,16 +22,14 @@ services:
       # https://www.mastertheboss.com/keycloak/keycloak-with-docker/?utm_content=cmp-true
       - --import-realm
     volumes:
-      - ./services_configs/keycloak-conf/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./services_configs/keycloak-conf/realm-export.json:/opt/keycloak/data/import/realm.json # Option 1: Realm without Authorization
+      # - ./services_configs/keycloak-conf/realm-export-with-authorization.json:/opt/keycloak/data/import/realm.json # Option 2: Realm with Authorization
       - ./services_configs/keycloak-conf/quarkus.properties:/opt/keycloak/conf/quarkus.properties
-    # env_file:
-    #   - ./credentials/aws/keys.env
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=password
       # https://keycloak.discourse.group/t/how-to-enable-acecss-logs-on-keycloak-quarkus-distribution-in-json-format/16333
       - KC_LOG_CONSOLE_OUTPUT=json # https://www.keycloak.org/server/all-config#category-logging
-    # working_dir: /workspace
     ports: 
       - "8090:8080"
 
@@ -52,7 +50,6 @@ services:
     ports:
       - 8081:8001
       - 5678:5678
-      # - 5679:5679
     depends_on:
       keycloak:
         condition: service_started
@@ -74,7 +71,6 @@ services:
     ports:
       - 8092:80
       - 5679:5678
-      # - 5679:5679
     depends_on:
       keycloak:
         condition: service_started
