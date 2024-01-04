@@ -1,0 +1,90 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    // https://code.visualstudio.com/docs/editor/tasks
+    // more anout docker -> https://stackoverflow.com/questions/64013251/debugging-python-in-docker-container-using-debugpy-and-vs-code-results-in-timeou
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "docker-compose.up",
+            "type": "shell",
+            "command": [
+                // https://stackoverflow.com/a/60889231/11101002
+                "docker compose down &&",
+                "docker compose up"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose.down",
+            "type": "shell",
+            "command": [
+                "docker compose down"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose.build",
+            "type": "shell",
+            "command": [
+                // https://stackoverflow.com/a/60889231/11101002
+                "docker compose down &&",
+                "docker compose build"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "docker.remote.container",
+            "type": "shell",
+            "command": "docker exec -it backend-backend_dev-1 /bin/bash",
+            "problemMatcher": []
+        },
+        {
+            "label": "debug.libs.test.integrity",
+            "type": "shell",
+            "command": "docker exec -it backend-backend_dev-1 python -B -m debugpy --wait-for-client --listen 0.0.0.0:5679 libs/finance_fetcher/tests/integrity_test.py",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "debug.django.tests.all - with `default` DB ! `--keepdb` ",
+            "type": "shell",
+            "command": "docker exec -it backend-backend_dev-1 python -B -m debugpy --wait-for-client --listen 0.0.0.0:5679 manage.py test -v 2 --keepdb --pattern=\"*_tests.py\"",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}

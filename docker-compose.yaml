@@ -23,11 +23,14 @@ services:
       - --import-realm
     volumes:
       - ./services_configs/keycloak-conf/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./services_configs/keycloak-conf/quarkus.properties:/opt/keycloak/conf/quarkus.properties
     # env_file:
     #   - ./credentials/aws/keys.env
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=password
+      # https://keycloak.discourse.group/t/how-to-enable-acecss-logs-on-keycloak-quarkus-distribution-in-json-format/16333
+      - KC_LOG_CONSOLE_OUTPUT=json # https://www.keycloak.org/server/all-config#category-logging
     # working_dir: /workspace
     ports: 
       - "8090:8080"
