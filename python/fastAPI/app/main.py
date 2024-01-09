@@ -12,7 +12,7 @@ from schemas import AuthData
 app = FastAPI()
 
 
-def check_permissions(permissions: str, token: str) -> None:
+def check_permissions(token: str, permissions: str) -> None:
     keycloak_client = KeycloakClient()
     try:
         keycloak_client.oidc_client.uma_permissions(
@@ -34,9 +34,11 @@ def authorize(auth_data: AuthData):
 def authorized_resource(
     token: Annotated[str, Depends(OAuth2PasswordBearer(tokenUrl='token'))],
 ) -> dict:
-    check_permissions(token, 'myresource#read:specific_resource')
+    check_permissions(
+        token=token, permissions='myresource#read',
+    )
 
-    return {'foo: bar'}
+    return {'foo': 'bar'}
 
 
 # service paths
