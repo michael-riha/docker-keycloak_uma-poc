@@ -1,3 +1,51 @@
+from typing import Annotated
+
+import uvicorn
+from keycloak.exceptions import KeycloakPostError
+
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+
+from keycloack_client import KeycloakClient
+from schemas import AuthData
+
+app = FastAPI()
+
+
+def check_permissions(permissions: str, token: str) -> None:
+    keycloak_client = KeycloakClient()
+    try:
+        keycloak_client.oidc_client.uma_permissions(
+            token,
+            permissions=permissions,
+        )
+    except KeycloakPostError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+
+@app.post('/auth')
+def authorize(auth_data: AuthData):
+    client = KeycloakClient()
+    token = client.oidc_client.token(**auth_data.model_dump())
+    return token
+
+
+@app.get('/resource')
+def authorized_resource(
+    token: Annotated[str, Depends(OAuth2PasswordBearer(tokenUrl='token'))],
+) -> dict:
+    check_permissions(token, 'myresource#read:specific_resource')
+
+    return {'foo: bar'}
+
+
+# service paths
+@app.get('/uma_resources_list')
+def get_uma_resource_set_list():
+    keycloak_client = KeycloakClient()
+    return keycloak_client.uma.resource_set_list()
+
+
 from fastapi import FastAPI, Request, HTTPException
 import os
 
@@ -204,3 +252,7 @@ def set_uma():
     created_resource = uma.resource_set_create(resource_to_create)
     get_created_resource = uma.resource_set_read(created_resource["_id"])
 
+
+if __name__ == '__main__':
+    # For debug purposes
+    uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True)
