@@ -16,7 +16,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-# ----------- AUTH -----------
+# ----------- BROWSER FLOW AUTH -----------
 issuer = os.environ.get("KEYCLOAK_URL")+"realms/"+os.environ.get("KEYCLOAK_REALM")
 clientId = os.environ.get("KEYCLOAK_CLIENT_ID")
 clientSecret = os.environ.get("KEYCLOAK_CLIENT_SECRET")
@@ -34,6 +34,7 @@ state = {} #HACK store the bearer_token for now!
 import requests
 import secrets
 from urllib.parse import urlencode, quote
+from helper.oidc import check_bearer, get_discovery_response
 @app.get("/private")
 def get_private(request: Request):
     try:
@@ -75,18 +76,9 @@ def get_callback(request: Request):
     print("something")
     resp= requests.get(url=oidcDiscoveryUrl)
     token_url= resp.json()["token_endpoint"]
-    # scope = 'openid email profile'
-    # client = OAuth2Session(clientId, clientSecret, scope=scope)
     redirect_uri = request.url.scheme+"://"+request.url.netloc+"/callback"
-    # Encoding the redirect_uri
-    # redirect_uri= quote(redirect_uri, safe='')
-    # https://github.com/lepture/authlib/blob/c8f154ff35459f79cc04f4c214601d25d716ddd4/authlib/oauth2/client.py#L160
-    #client = OAuth2Session(clientId, clientSecret, scope=scope, redirect_uri=redirect_uri)
-    params= request.query_params
-    # token_resp = client.fetch_token(url=token_url, authorization_response=request.url._url, authorization_code='authorization_code')
     token_resp = client.fetch_token(url=token_url, authorization_response=request.url._url, redirect_uri= redirect_uri, authorization_code='authorization_code')
     # https://github.com/lepture/authlib/blob/c8f154ff35459f79cc04f4c214601d25d716ddd4/docs/specs/rfc7636.rst#L83
-
     state['bearer_token'] = token_resp['access_token']
     return RedirectResponse('/me')
 
@@ -94,7 +86,6 @@ def get_callback(request: Request):
 from fastapi.responses import HTMLResponse
 @app.get("/me", response_class=HTMLResponse)
 def get_me(request: Request):
-    print("something")
     resp= requests.get(url=oidcDiscoveryUrl)
     userinfo_endpoint = resp.json()["userinfo_endpoint"]
     #HACK for browser redirect outside the container environment we need to replace `host.docker.internal` with `localhost`

@@ -3,7 +3,7 @@
 
 ## Run `python/test`-example
 
-> [!WARNING]  
+> [!WARNING]
 > This is not a fully working example, yet.
 > The Goal if this is trying the `python-keycloak`-library and their usage of `UMA` (qwhich is not implemented, yet)
 
@@ -20,14 +20,24 @@
 
 ## Run `python/fastAPI`-example
 
-> [!WARNING]  
+> [!WARNING]
 > This is a WIP, yet
 
 - `docker compose --profile fastapi up`
 - attach remote debugger VCS (Run & Debug) "► Remote Debug fastAPI"
 - add a breakpoint somewhere in `python/fastAPI/app/main.py`
-- Open Browser `http://localhost:8092/uma`
+- Open Browser
+    - `http://localhost:8092/private` OIDC browser-flow
+        - redirect `http://localhost:8090/realms/myrealm/...` to `Keycloak`
+            - `user`/`password`
+            - redirects to `http://localhost:8092/callback`
+        - redirects to `http://localhost:8092/me`<br>
+        which displays `userinfo` on a simple HTML-page
+    - `http://localhost:8092/uma`
 - investigate your breakpoint
+
+
+
 
 for `UMA` to work please enable in `Keycloak` http://localhost:8090/admin/master/console/
 
