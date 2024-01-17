@@ -34,7 +34,16 @@ state = {} #HACK store the bearer_token for now!
 import requests
 import secrets
 from urllib.parse import urlencode, quote
-from helper.oidc import check_bearer, get_discovery_response
+#HACK
+#TODO put the helpers into a dedicated folder !WARNING! this needs to be mounted in python as well!!
+# import sys
+# # Get the absolute path of the parent folder
+# parent_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# # Add the parent folder to the Python path
+# sys.path.append(parent_folder_path)
+from helper.oidc import check_bearer, get_discovery_response_dict
+
+
 @app.get("/private")
 def get_private(request: Request):
     try:
@@ -91,29 +100,33 @@ def get_me(request: Request):
     #HACK for browser redirect outside the container environment we need to replace `host.docker.internal` with `localhost`
     userinfo_endpoint = userinfo_endpoint.replace(os.environ.get("KEYCLOAK_URL"), os.environ.get("KEYCLOAK_BROWSER_URL"))
     javascript_code = '''
-        const endpointUrl = '{{url}}';
+        let endpointUrl = '{{url}}';
         const bearerToken = '{{token}}';
 
-        fetch(endpointUrl, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${bearerToken}`
+        function request(url) {
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${bearerToken}`
+                }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Parse the JSON data received
+                })
+                .then(data => {
+                    // Work with the 'data' received from the API
+                    console.log('Data received:', data);
+                    document.querySelector("h1").textContent= "Hello "+data.name+"("+data.email+")"
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
         }
-        })
-        .then(response => {
-            if (!response.ok) {
-            throw new Error('Network response was not ok');
-            }
-            return response.json(); // Parse the JSON data received
-        })
-        .then(data => {
-            // Work with the 'data' received from the API
-            console.log('Data received:', data);
-            document.querySelector("h1").textContent= "Hello "+data.name+"("+data.email+")"
-        })
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
-        });
+        request(endpointUrl )
+
     '''
     # Replace placeholders with actual values using str.replace()
     javascript_code = javascript_code.replace('{{url}}',  userinfo_endpoint).replace('{{token}}', state['bearer_token'])
@@ -127,12 +140,39 @@ def get_me(request: Request):
             </head>
             <body>
                 <h1></h1>
+                <a href='/verify'><h2>Verify JWT</h2></a>
             </body>
         </html>
     """.format(javascript_code=javascript_code)
 
+from helper.oidc import verify_jwt
+from authlib.jose import jwt
+from authlib.jose.errors import *
+@app.get("/verify")
+def get_callback(request: Request):
+    print("something")
+    try:
+        token= check_bearer(request)
+        #verify_jwt(state['bearer_token'])
+        verify_jwt(token)
+        return {"Hello": "/verify"}
+    #TODO: get a more detailed exception
+    except ExpiredTokenError:
+        # Token has expired
+        raise HTTPException(status_code=401, detail="Invalid JWT: Token has expired")
+    except MissingClaimError as e:
+        # Missing required claims
+        raise HTTPException(status_code=401, detail=f"Invalid JWT: Missing claim - {e}")
+    except InvalidClaimError as e:
+        # Invalid claims
+        raise HTTPException(status_code=401, detail=f"Invalid JWT: {e}")
+    except InvalidTokenError:
+        # Invalid token
+        raise HTTPException(status_code=401, detail="Invalid JWT: Token is not valid")
+
 # ----------- UMA -----------
 from keycloak import KeycloakAdmin, KeycloakOpenID, KeycloakOpenIDConnection, KeycloakUMA
+from fastapi.responses import JSONResponse
 @app.get("/uma")
 def get_uma():
     # do we have all env vars ready?
@@ -150,7 +190,11 @@ def get_uma():
     # https://github.com/marcospereirampj/python-keycloak/blob/master/tests/test_keycloak_uma.py
     resource_sets = uma.resource_set_list()
     resource_set_list = list(resource_sets)
-    print("something")
+    return JSONResponse(content={"data": resource_set_list})
+
+# TODO: not working, yet!
+@app.post("/uma")
+def set_uma():
     # https://github.com/marcospereirampj/python-keycloak/blob/bc810d17cbd66bc6315409508aec386c6b8180b1/tests/test_keycloak_uma.py#L92
     resource_to_create = {
         "name": "mytest",
@@ -159,4 +203,4 @@ def get_uma():
     }
     created_resource = uma.resource_set_create(resource_to_create)
     get_created_resource = uma.resource_set_read(created_resource["_id"])
-    return {"Hello": "World"}
+

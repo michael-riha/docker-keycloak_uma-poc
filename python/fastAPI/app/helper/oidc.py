@@ -24,6 +24,7 @@ def check_bearer (request: Request):
             raise HTTPException(status_code=401, detail="Invalid authorization header")
         # Extract the token after 'Bearer '
         bearer_token = authorization_header.split(" ")[1]
+        return bearer_token
     except HTTPException as e:
         # Catch HTTPException and perform a redirect
         if e.status_code == 401:
@@ -48,7 +49,7 @@ def check_bearer (request: Request):
 def get_discovery_response():
      return requests.get(url=oidcDiscoveryUrl)
 
-def get_discovery_response_dic():
+def get_discovery_response_dict():
      return get_discovery_response().json()
 
 def encode_url(url):
@@ -61,3 +62,49 @@ def clean_browser_url(url:str):
     #HACK for browser redirect outside the container environment we need to replace `host.docker.internal` with `localhost`
     return url.replace(os.environ.get("KEYCLOAK_URL"), os.environ.get("KEYCLOAK_BROWSER_URL"))
 
+from authlib.jose import jwt
+from authlib.jose.errors import *
+def get_public_keys():
+    # Fetching OIDC discovery information
+    discovery_info= get_discovery_response_dict()
+     # Fetching JWKS URI from discovery information
+    jwks_uri = discovery_info['jwks_uri']
+    # Fetching JWKS (JSON Web Key Set) from JWKS URI
+    jwks_response = requests.get(jwks_uri)
+    jwks = jwks_response.json()
+    # Fetching the JWT certificate from JWKS https://docs.authlib.org/en/latest/jose/jwt.html#use-dynamic-keys
+    return jwks
+# https://www.scottbrady91.com/python/authlib-python-jwt
+def verify_jwt(token:str):
+    # Fetching the JWT certificate from JWKS
+    jwks = get_public_keys()
+    # Verify the JWT token using the retrieved certificates
+    decoded_jwt = jwt.decode(token, key=jwks)
+    # If decoding is successful, `decoded_jwt` will contain the decoded token information
+
+    # Accessing JWT body attributes (claims) https://docs.authlib.org/en/latest/specs/rfc7519.html#authlib.jose.JWTClaims
+    if decoded_jwt:
+        # Example of accessing specific claims/attributes
+        sub = decoded_jwt.get('sub')  # Example: subject claim
+        iss = decoded_jwt.get('iss')  # Example: issuer claim
+        exp = decoded_jwt.get('exp')  # Example: expiration time claim
+
+        # Print or use the retrieved claims/attributes as needed
+        print("Subject:", sub)
+        print("Issuer:", iss)
+        print("Expiration Time:", exp)
+    try:
+        decoded_jwt.validate()
+        return decoded_jwt
+    except ExpiredTokenError as e:
+        # Token has expired
+        raise e
+    except MissingClaimError as e:
+        # Missing required claims
+        raise e
+    except InvalidClaimError as e:
+        # Invalid claims
+        raise e
+    except InvalidTokenError:
+        # Invalid token
+        raise e

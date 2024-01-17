@@ -35,6 +35,11 @@
         which displays `userinfo` on a simple HTML-page
     - `http://localhost:8092/uma`
 - investigate your breakpoint
+<br>
+To further check requests with the past `Bearer`-Token to the `/me`-endpoint,
+you can open the Browsers -> **Developer Tools** and call the `/verify`-endpoint
+with the provided JS function:<br>
+ `request("http://localhost:8092/verify");`
 
 
 
