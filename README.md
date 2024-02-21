@@ -28,7 +28,7 @@
 - add a breakpoint somewhere in `python/fastAPI/app/main.py`
 - Open Browser
     - `http://localhost:8092/private` OIDC browser-flow
-        - redirect `http://localhost:8090/realms/myrealm/...` to `Keycloak`
+        - redirect `http://localhost:9090/realms/myrealm/...` to `Keycloak`
             - `user`/`password`
             - redirects to `http://localhost:8092/callback`
         - redirects to `http://localhost:8092/me`<br>
@@ -44,7 +44,7 @@ with the provided JS function:<br>
 
 
 
-for `UMA` to work please enable in `Keycloak` http://localhost:8090/admin/master/console/
+for `UMA` to work please enable in `Keycloak` http://localhost:9090/admin/master/console/
 
 - `myrealm` -> `clients` -> `myclient` -> `Authorization`
 - `myrealm` -> `clients` -> `myclient`/`Settings`:
