@@ -11,7 +11,7 @@ services:
     # DEFAULT COMMAND
     # command: start-dev
     # BEHIND PROXY: https://pecenekmanas.medium.com/keycloak-behind-a-reverse-proxy-with-https-b149eda3b9f3
-    command: 
+    command:
       - start-dev
       # https://www.keycloak.org/server/reverseproxy
       - --proxy=edge
@@ -30,8 +30,8 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=password
       # https://keycloak.discourse.group/t/how-to-enable-acecss-logs-on-keycloak-quarkus-distribution-in-json-format/16333
       - KC_LOG_CONSOLE_OUTPUT=json # https://www.keycloak.org/server/all-config#category-logging
-    ports: 
-      - "8090:8080"
+    ports:
+      - "9090:8080"
 
   keycloak-py-test:
     build:
@@ -48,29 +48,29 @@ services:
     env_file:
       - ./python/test/.env
     ports:
-      - 8081:8001
-      - 5678:5678
+      - "8081:8001"
+      - "5678:5678"
     depends_on:
       keycloak:
         condition: service_started
     profiles:
       - pytest
-  
+
   keycloak-py-fastapi:
     build:
       context: ./python/fastAPI
-      # dockerfile: ./tests/Dockerfile
-    image: python-uma-fastapi
+      dockerfile: ./Dockerfile
+#    image: python-uma-fastapi
     volumes:
-      - ./python/fastAPI/app:/app
+      - ./python/fastAPI/app:/app/
     # entrypoint: "tail -f /dev/null"
     # command: "uvicorn main:app --host 0.0.0.0 --port 80 --reload"
     command: "python -u -m debugpy --listen 0.0.0.0:5678 -m uvicorn --reload --host 0.0.0.0 --port 80 main:app"
     env_file:
        - ./python/test/.env # currently they still align with the ones from testing
     ports:
-      - 8092:80
-      - 5679:5678
+      - "8092:80"
+      - "5679:5678"
     depends_on:
       keycloak:
         condition: service_started
